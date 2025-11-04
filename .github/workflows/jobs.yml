@@ -1,0 +1,27 @@
+name: CD - Discord Bot Deployment
+
+on:
+  push:
+    branches: [ main ] # mainブランチにマージされたら実行
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }} # GitHub Secretsに保存
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # サーバー上のプロジェクトディレクトリに移動
+          cd /var/www/luminos-bot
+          # 最新コードを取得
+          git pull origin main
+          # 依存関係を更新
+          npm ci
+          # プロセスを再起動 (例: PM2を使用)
+          pm2 restart luminos-bot
